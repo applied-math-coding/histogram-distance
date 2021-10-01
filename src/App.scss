@@ -1,0 +1,12 @@
+.image-container{
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, min-content));
+  justify-content: center;
+}
+
+.distances-container{
+  .mini-image{
+    width: 50px;
+  }
+}
