@@ -1,6 +1,7 @@
 import { defineComponent } from 'vue';
-import imageService from './image.service';
+import imageService, { ColorHist } from './image.service';
 import numeral from 'numeral';
+import * as Plotly from "plotly.js";
 
 const TARGET_WIDTH = 300;
 
@@ -32,6 +33,11 @@ export default defineComponent({
     this.distances = data
       .map(({ imageData: im }) => imageService.computeHist({ im }))
       .map((h1, _, hists) => hists.map(h2 => imageService.computeDist(h1, h2)));
+    const root = document.querySelector(':root') as HTMLElement;
+    root.style.setProperty('--number-images', `${this.imageUrls.length}`);
+    const hist1 = imageService.computeHist({ im: data[0].imageData });
+    const hist2 = imageService.computeHist({ im: data[1].imageData });
+    this.plot(hist1, hist2);
   },
   components: {},
   methods: {
@@ -54,6 +60,45 @@ export default defineComponent({
     },
     formatDistance(d: number): string {
       return numeral(d < 0.00001 ? 0 : d).format('0.00');
+    },
+    plot(h1: ColorHist, h2: ColorHist) {
+      let layout = {
+        height: 500,
+        width: 900,
+        xaxis: { range: [0, 255] },
+      };
+      let config = {
+        responsive: true,
+        displayModeBar: false,
+        displaylogo: false,
+      };
+      Plotly.newPlot(
+        this.$refs.plotContainer as HTMLElement,
+        [
+          {
+            name: 'Image 1',
+            x: h1.bins,
+            y: h1.r,
+            type: "bar",
+            opacity: 0.5,
+            marker: {
+              color: 'red',
+            },
+          },
+          {
+            name: 'Image 2',
+            x: h2.bins,
+            y: h2.r,
+            type: "bar",
+            opacity: 0.5,
+            marker: {
+              color: 'blue',
+            },
+          }
+        ] as any,
+        layout,
+        config
+      );
     }
   }
 });
